@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from starlette import status
+from starlette.responses import RedirectResponse
+from starlette.templating import Jinja2Templates
 
 from model import Todo, TodoItem, TodoItems
 
@@ -8,31 +10,37 @@ todo_router = APIRouter()
 
 todo_list = []
 
+templates = Jinja2Templates(directory="templates/")
+
 
 @todo_router.post("/todo", status_code=201)
-async def add_todo(todo: Todo) -> dict:
+async def add_todo(request: Request, todo: Todo = Depends(Todo.as_form)):
+    todo.id = len(todo_list) + 1
     todo_list.append(todo)
-    return {
-        "message": "Todo added successfully."
-    }
+    return RedirectResponse(url="/todo", status_code=status.HTTP_302_FOUND)
     
     
 @todo_router.get("/todo", response_model=TodoItems)
-async def retrieve_todos() -> dict:
-    return {
+async def retrieve_todo(request: Request):
+    return templates.TemplateResponse("todo.html", {
+        "request": request,
         "todos": todo_list
-    }
+    })
     
     
 @todo_router.get("/todo/{todo_id}")
 async def get_single_todo(
+    request: Request,
     todo_id: int = Path(..., title="The ID of the todo to retrieve.")
 ) -> dict:
     for todo in todo_list:
         if todo.id == todo_id:
-            return {
-                "todo": todo
-            }
+            return templates.TemplateResponse(
+                "todo.html", {
+                    "request": request,
+                    "todo": todo
+                }
+            )
             
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
