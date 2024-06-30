@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from models.events import Event
 
@@ -9,7 +9,7 @@ class User(BaseModel):
     password: str
     events: Optional[List[Event]]
     
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "email": "fastapi@packt.com",
@@ -17,13 +17,14 @@ class User(BaseModel):
                 "events": [],
             }
         }
+    )
         
         
 class UserSignIn(BaseModel):
     email: EmailStr
     password: str
-    
-    class Config:
+
+    model_config = ConfigDict(    
         json_schema_extra = {
             "example": {
                 "email": "fastapi@packt.com",
@@ -31,3 +32,4 @@ class UserSignIn(BaseModel):
                 "events": [],
             }
         }
+    )
